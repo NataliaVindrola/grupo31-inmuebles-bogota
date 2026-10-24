@@ -1,0 +1,5 @@
+outs:
+- md5: 4bcaa171eb83b351e4c7f1f03e4cd963
+  size: 98256988
+  hash: md5
+  path: compraventas_0125_bogota.csv
