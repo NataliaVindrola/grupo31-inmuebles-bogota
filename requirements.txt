@@ -1,0 +1,12 @@
+pandas>=2.2,<3
+numpy>=2.0
+scikit-learn>=1.9,<1.10
+joblib>=1.5
+lifelines>=0.30
+matplotlib>=3.9
+sodapy>=2.2
+mlflow>=3.0
+dvc>=3.50
+dash>=3.0,<4
+plotly>=6.0
+jupyterlab>=4.0
