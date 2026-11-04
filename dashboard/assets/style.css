@@ -1,0 +1,13 @@
+/* Estilos del tablero; colores tomados de mockup/mockup_tablero.html */
+body { font-family: "Segoe UI", Arial, sans-serif; background: #f2f4f8; margin: 0; padding: 24px; color: #222; }
+.app { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid #b8c2d0; border-radius: 10px; overflow: hidden; }
+.app > header { background: #1e3a5f; color: #fff; padding: 14px 20px; font-weight: 600; font-size: 18px; }
+.app > nav { display: flex; gap: 8px; padding: 12px 20px 0; }
+.tab { flex: 1; padding: 8px; border: 1px solid #c5ccd8; background: #f2f4f8; border-radius: 6px 6px 0 0; text-align: center; text-decoration: none; color: #1e3a5f; }
+.app > div { padding: 12px 20px; }
+.controles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.controles > * { min-width: 200px; }
+.nota { color: #556; font-size: 13px; }
+.aviso { background: #fff4e5; border: 1px solid #f0c36d; padding: 10px; border-radius: 6px; }
+.resultado { font-weight: 600; }
+.app > footer { padding: 10px 20px; font-size: 12px; color: #667; border-top: 1px solid #e3e7ee; }
