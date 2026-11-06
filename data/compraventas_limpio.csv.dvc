@@ -1,0 +1,5 @@
+outs:
+- md5: 0afb4286ebe8dfca87aa7384ff7e17b0
+  size: 100809949
+  hash: md5
+  path: compraventas_limpio.csv

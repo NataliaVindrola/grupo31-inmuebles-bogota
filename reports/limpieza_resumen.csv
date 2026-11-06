@@ -1,0 +1,8 @@
+paso,filas_antes,filas_despues,diferencia,nota
+0. Registro crudo,665086,665086,0,
+1. Excluir ORIP fuera de 50N/50C/50S,665086,665077,-9,
+2. Excluir fechas no convertibles,665077,665077,0,
+3. Valor < 5 millones o cero pasa a vacio,665077,665077,0,"(2,633 valores invalidos; la fila se conserva para liquidez)"
+4. Colapsar duplicados (predio + fecha),665077,664051,-1026,
+5. Deflactar a pesos de 2026-09,664051,664051,0,(0 ventas sin IPC)
+6. Variables de historial y actividad de zona,664051,664051,0,
