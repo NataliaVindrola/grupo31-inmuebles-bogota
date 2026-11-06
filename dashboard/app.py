@@ -3,6 +3,7 @@
 Responsable: Jorge. Uso, desde la raíz del repositorio:   python dashboard/app.py   (http://localhost:8050)
 Las pantallas están en dashboard/pages/ (una por archivo) y leen las tablas de dashboard/data/ (las genera `python -m src.tablas`).
 """
+import os
 import sys
 from pathlib import Path
 
@@ -27,4 +28,4 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8050)
+    app.run(debug=os.environ.get("DASH_DEBUG") == "1", host="0.0.0.0", port=int(os.environ.get("PORT", 8050)))
