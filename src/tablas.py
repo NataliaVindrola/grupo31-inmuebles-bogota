@@ -31,6 +31,8 @@ except ImportError:
 SALIDA = Path("dashboard/data")
 REPORTES = Path("reports")
 
+BASE_QUINTILES = "nominal"      # "constantes": valor de la 1a venta en pesos constantes de MES_REF;
+                                # "nominal": valor nominal de la 1a venta (como el notebook 02 de la Entrega 1)
 PORCENTAJE = False       # False: fraccion (0.045), como espera el tablero ({:.1%}); True: puntos porcentuales (4.5)
 MIN_N = 100              # segmentos con menos pares se marcan como no concluyentes
 N_BOOT = 2000            # remuestreos del intervalo de confianza
@@ -83,7 +85,7 @@ def construir_pares(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     p = p[~atipico].copy()
     traza.append((f"Sin operaciones atipicas (valor identico y <= {DIAS_ATIPICO} dias)", len(p)))
 
-    expo = 365.0 / p["dias"]
+    expo = DIAS_ANIO / p["dias"]          # 365.25, igual que el notebook 02
     p["ret_nominal"] = (p["v2"] / p["v1"]) ** expo - 1
     p["ret_real"] = (p["r2"] / p["r1"]) ** expo - 1
     traza = pd.DataFrame(traza, columns=["filtro", "pares"])
@@ -103,8 +105,11 @@ def mediana_con_ic(x: np.ndarray, rng: np.random.Generator) -> tuple[float, floa
 
 
 def tabla_segmentos(pares: pd.DataFrame) -> pd.DataFrame:
-    """Zona x quintil del valor de la primera venta (pesos constantes), con mediana real e intervalo."""
-    q, bordes = pd.qcut(pares["r1"], 5, labels=False, retbins=True)
+    """Zona x quintil del valor de la primera venta (segun BASE_QUINTILES), con mediana real e intervalo."""
+    if BASE_QUINTILES not in ("constantes", "nominal"):
+        raise ValueError('BASE_QUINTILES debe ser "constantes" o "nominal"')
+    base = "r1" if BASE_QUINTILES == "constantes" else "v1"
+    q, bordes = pd.qcut(pares[base], 5, labels=False, retbins=True)
     pares = pares.assign(q=q.astype(int) + 1)
     rng = np.random.default_rng(D.SEMILLA)
     filas = []
