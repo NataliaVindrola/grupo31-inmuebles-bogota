@@ -21,6 +21,7 @@ def leer_argumentos() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Entrena y registra el modelo de reventa en MLflow")
     ap.add_argument("--nombre", default="corrida")
     ap.add_argument("--experimento", default="reventa-3a")
+    ap.add_argument("--autor", default="sin_autor", help="quién registra la corrida (jorge, julian, natalia); queda como etiqueta")
     ap.add_argument("--max-iter", type=int, default=200)
     ap.add_argument("--learning-rate", type=float, default=0.05)
     ap.add_argument("--max-depth", type=int, default=None)
@@ -39,6 +40,7 @@ def main() -> None:
     params = {"max_iter": a.max_iter, "learning_rate": a.learning_rate, "max_depth": a.max_depth, "random_state": datos.SEMILLA}
 
     with mlflow.start_run(run_name=a.nombre):
+        mlflow.set_tag("autor", a.autor)
         mlflow.log_params({**params, "features": ",".join(a.features), "n_train": len(train), "n_test": len(test)})
         modelo = reventa.entrenar(train, params, a.features)
         metricas = reventa.evaluar(modelo, test, a.features)
