@@ -11,6 +11,6 @@ mediana_real_2023_pct,1.2
 segmentos_reportables,14
 segmentos_total,15
 ancho_mediano_ic_pp,4.1
-prob_reventa_3a_norte,7.78
-prob_reventa_3a_centro,9.24
-prob_reventa_3a_sur,7.72
+prob_reventa_3a_norte_pct,7.78
+prob_reventa_3a_centro_pct,9.24
+prob_reventa_3a_sur_pct,7.72

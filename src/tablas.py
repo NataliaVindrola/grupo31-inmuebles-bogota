@@ -9,9 +9,10 @@ liquidez_resumen.csv  zona, prob_1a, prob_3a, prob_5a, n
 rango_historico.csv   zona, anio, p10, p25, p50, p75, p90, n        (M$ constantes de MES_REF)
 cifras_clave.csv      cifra, valor                                   (ya existe en reports/figures/cifras_clave_02.csv)
 
-Unidades: mediana_real, ic_inf, ic_sup y prob_* se guardan en PUNTOS PORCENTUALES (4.5 = 4,5 %) cuando
-PORCENTAJE = True (como en la maqueta); con False se guardan como fraccion (0.045). Los valores en M$ son
-millones de pesos constantes de MES_REF.
+Unidades: mediana_real, ic_inf, ic_sup y prob_* se guardan como FRACCION (0.045 = 4,5 %) porque el tablero
+las formatea con {:.1%}; con PORCENTAJE = True se guardarian en puntos porcentuales (4.5). Las cifras de
+cifras_clave.csv con sufijo _pct van siempre en porcentaje. Los valores en M$ son millones de pesos
+constantes de MES_REF.
 
 Ademas escribe reports/pares_filtros.csv con el paso a paso de los filtros de las ventas repetidas.
 """
@@ -30,7 +31,7 @@ except ImportError:
 SALIDA = Path("dashboard/data")
 REPORTES = Path("reports")
 
-PORCENTAJE = True        # True: puntos porcentuales (4.5); False: fraccion (0.045)
+PORCENTAJE = False       # False: fraccion (0.045), como espera el tablero ({:.1%}); True: puntos porcentuales (4.5)
 MIN_N = 100              # segmentos con menos pares se marcan como no concluyentes
 N_BOOT = 2000            # remuestreos del intervalo de confianza
 NIVEL_IC = 90            # intervalo del 90 %
@@ -44,6 +45,11 @@ PASO_ANIOS = 0.1
 
 def _esc(x):
     return x * 100 if PORCENTAJE else x
+
+
+def _dec(base: int = 2) -> int:
+    """Decimales a guardar: 2 en puntos porcentuales (4.52) o 4 en fraccion (0.0452); mismo detalle."""
+    return base if PORCENTAJE else base + 2
 
 
 # ----------------------------------------------------------- ventas repetidas
@@ -111,7 +117,7 @@ def tabla_segmentos(pares: pd.DataFrame) -> pd.DataFrame:
                 "rango_min_musd": round(bordes[k - 1] / 1e6, 1),
                 "rango_max_musd": round(bordes[k] / 1e6, 1),
                 "n": len(x),
-                "mediana_real": round(_esc(med), 2), "ic_inf": round(_esc(lo), 2), "ic_sup": round(_esc(hi), 2),
+                "mediana_real": round(_esc(med), _dec()), "ic_inf": round(_esc(lo), _dec()), "ic_sup": round(_esc(hi), _dec()),
                 "suficiente": len(x) >= MIN_N,
             })
     return pd.DataFrame(filas)
@@ -159,10 +165,10 @@ def tablas_liquidez(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         t_ev, S = kaplan_meier(z["dias"].to_numpy(), z["evento"].to_numpy())
         prob = 1 - supervivencia_en(t_ev, S, anios * DIAS_ANIO)
         prob = np.where(anios * DIAS_ANIO > z["dias"].max(), np.nan, prob)   # no se extrapola
-        curvas.append(pd.DataFrame({"zona": zona, "anios": anios, "prob_reventa": np.round(_esc(prob), 3), "n": len(z)}))
+        curvas.append(pd.DataFrame({"zona": zona, "anios": anios, "prob_reventa": np.round(_esc(prob), _dec(3)), "n": len(z)}))
         p135 = 1 - supervivencia_en(t_ev, S, np.array([1, 3, 5]) * DIAS_ANIO)
-        resumen.append({"zona": zona, "prob_1a": round(_esc(p135[0]), 2), "prob_3a": round(_esc(p135[1]), 2),
-                        "prob_5a": round(_esc(p135[2]), 2), "n": len(z)})
+        resumen.append({"zona": zona, "prob_1a": round(_esc(p135[0]), _dec()), "prob_3a": round(_esc(p135[1]), _dec()),
+                        "prob_5a": round(_esc(p135[2]), _dec()), "n": len(z)})
     return pd.concat(curvas, ignore_index=True), pd.DataFrame(resumen)
 
 
@@ -200,7 +206,7 @@ def tabla_cifras(df, pares, seg, resumen) -> pd.DataFrame:
         ("ancho_mediano_ic_pp", round(float((seg["ic_sup"] - seg["ic_inf"]).median()) * (1 if PORCENTAJE else 100), 1)),
     ]
     for _, r in resumen.iterrows():
-        c.append((f"prob_reventa_3a_{r['zona'].lower()}", r["prob_3a"]))
+        c.append((f"prob_reventa_3a_{r['zona'].lower()}_pct", round(float(r["prob_3a"]) * (1 if PORCENTAJE else 100), 2)))
     # dtype=object para que los conteos se guarden como enteros (268) y no como 268.0
     return pd.DataFrame({"cifra": [k for k, _ in c], "valor": pd.Series([v for _, v in c], dtype=object)})
 
