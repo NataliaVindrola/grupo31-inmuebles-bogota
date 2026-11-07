@@ -1,5 +1,5 @@
 """
-datos.py - Limpieza, deflactacion y variables de historial del registro de
+limpieza.py - Limpieza, deflactacion y variables de historial del registro de
 compraventas de Bogota (IGAC-SNR, codigo 0125).
 
 Entradas (versionadas con DVC):
@@ -11,8 +11,8 @@ Salida:
     reports/limpieza_resumen.csv        filas que entran y salen en cada paso
 
 Uso (desde la raiz del proyecto):
-    python src/datos.py
-    python src/datos.py --mes-ref 2026-09
+    python src/limpieza.py
+    python src/limpieza.py --mes-ref 2026-09
 
 Pasos de limpieza (en orden):
     1. Zona registral: 50N=Norte, 50C=Centro, 50S=Sur; se excluyen otras ORIP.
@@ -24,6 +24,10 @@ Pasos de limpieza (en orden):
     5. Deflactacion: valor_real = valor * IPC(mes_ref) / IPC(mes de la venta).
     6. Historial del predio y actividad de la zona, calculados SOLO con
        informacion anterior a la fecha de la venta (sin fuga de informacion).
+
+Los pasos 1 a 4 viven en limpiar_registro(), que tambien usa src/datos.py
+(cargar_compraventas) para que los modelos, las tablas y este script apliquen
+exactamente las mismas reglas.
 """
 import argparse
 import os
@@ -42,14 +46,16 @@ RE_ISO = r"^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}:\d{2}(\.\d+)?)?$"
 class Bitacora:
     """Registra cuantas filas hay despues de cada paso (evidencia para la Guia 4)."""
 
-    def __init__(self):
+    def __init__(self, silencioso=False):
         self.filas = []
+        self.silencioso = silencioso
 
     def anotar(self, paso, antes, despues, nota=""):
         self.filas.append({"paso": paso, "filas_antes": antes,
                            "filas_despues": despues, "diferencia": despues - antes,
                            "nota": nota})
-        print(f"{paso:<46} {antes:>9,} -> {despues:>9,}  {nota}")
+        if not self.silencioso:
+            print(f"{paso:<46} {antes:>9,} -> {despues:>9,}  {nota}")
 
     def guardar(self, ruta):
         os.makedirs(os.path.dirname(ruta) or ".", exist_ok=True)
@@ -84,9 +90,14 @@ def indice_mes(periodo):
 
 
 # ------------------------------------------------------------------- limpieza
-def limpiar(df, ipc, mes_ref, bit):
+def limpiar_registro(df, bit):
+    """Pasos 1 a 4: zona, fechas, valor valido y duplicados. No deflacta.
+
+    Deja `valor` tal como viene (numerico) y agrega `valor_valido` (>= 5 millones).
+    """
     n = len(df)
     bit.anotar("0. Registro crudo", n, n)
+    df = df.copy()
 
     # 1. Zona registral
     df["orip"] = df["orip"].astype(str).str.strip().str.upper()
@@ -104,11 +115,12 @@ def limpiar(df, ipc, mes_ref, bit):
     if desfase:
         print(f"   ADVERTENCIA: {desfase:,} filas donde el anio de la fecha no coincide con year_radica")
 
-    # 3. Valor valido (>= 5 millones); el resto queda vacio, la fila se conserva
+    # 3. Valor valido (>= 5 millones); la fila se conserva siempre (sirve para liquidez)
     valor = pd.to_numeric(df["valor"], errors="coerce")
     bajos = int(((valor > 0) & (valor < VALOR_MINIMO)).sum() + (valor == 0).sum())
-    df["valor"] = valor.where(valor >= VALOR_MINIMO)
-    bit.anotar("3. Valor < 5 millones o cero pasa a vacio", len(df), len(df),
+    df["valor"] = valor
+    df["valor_valido"] = valor >= VALOR_MINIMO
+    bit.anotar("3. Valor < 5 millones o cero = no valido", len(df), len(df),
                f"({bajos:,} valores invalidos; la fila se conserva para liquidez)")
 
     # 4. Duplicados: misma venta (predio + fecha) registrada varias veces
@@ -120,6 +132,13 @@ def limpiar(df, ipc, mes_ref, bit):
             .drop_duplicates(["predio_id", "fecha"], keep="first")
             .copy())
     bit.anotar("4. Colapsar duplicados (predio + fecha)", antes, len(df))
+    return df
+
+
+def limpiar(df, ipc, mes_ref, bit):
+    df = limpiar_registro(df, bit)
+    # En el archivo limpio el valor invalido queda vacio
+    df["valor"] = df["valor"].where(df["valor_valido"])
 
     # 5. Deflactacion a pesos del mes de referencia
     df["mes"] = df["fecha"].dt.to_period("M")
