@@ -1,4 +1,5 @@
-"""Pantalla 3: rango de una oferta. El usuario elige zona y año, escribe el precio y ve el rango esperado (p10, mediana y p90)."""
+"""Pantalla 3: rango de una oferta. El usuario elige zona y año, escribe el precio y ve el rango esperado (p10, mediana y p90):
+el histórico (percentiles registrados) y el que predice el modelo de rango (models/rango/v1)."""
 import dash
 import plotly.graph_objects as go
 from dash import Input, Output, callback, dcc, html
@@ -41,16 +42,38 @@ def mostrar(zona, anio, precio):
                     hovertemplate="Mediana %{x:,.0f} M$<extra></extra>")
     fig.add_scatter(x=[precio], y=[0], mode="markers", marker={"symbol": "diamond", "size": 20, "color": COLOR_ESTADO[r["estado"]], "line": {"width": 1, "color": "white"}},
                     name="Oferta", hovertemplate="Oferta %{x:,.0f} M$<extra></extra>")
-    for x, t in ((r["p10"], "p10"), (r["p50"], "mediana"), (r["p90"], "p90")):
-        fig.add_annotation(x=x, y=0, text=f"{t}<br>{x:,.0f}", yshift=-42, showarrow=False, font={"size": 11})
-    fig.update_layout(height=190, margin={"l": 20, "r": 20, "t": 10, "b": 40}, showlegend=False, plot_bgcolor="white",
+    m = servicios.rango_modelo(zona, anio, float(precio))
+    for x, t in ((r["p10"], "p10"), (r["p50"], "mediana"), (r["p90"], "p90")):   # con el modelo, las etiquetas van arriba
+        fig.add_annotation(x=x, y=0, text=f"{t}<br>{x:,.0f}", yshift=-42 if m is None else 34, showarrow=False, font={"size": 11})
+    if m is not None:   # rango que predice el modelo (models/rango/v1), en una segunda fila
+        fig.add_shape(type="line", x0=m["p10"], x1=m["p90"], y0=-0.6, y1=-0.6, line={"color": "#e07a5f", "width": 6, "dash": "dot"}, layer="below")
+        fig.add_scatter(x=[m["p10"], m["p50"], m["p90"]], y=[-0.6] * 3, mode="markers", marker={"symbol": "line-ns", "size": 18, "line": {"width": 3, "color": "#e07a5f"}},
+                        name="Modelo", customdata=["p10", "mediana", "p90"], hovertemplate="Modelo, %{customdata}: %{x:,.0f} M$<extra></extra>")
+        fig.add_scatter(x=[precio], y=[-0.6], mode="markers", marker={"symbol": "diamond", "size": 14, "color": COLOR_ESTADO[m["estado"]], "line": {"width": 1, "color": "white"}},
+                        hoverinfo="skip")
+        for x, t in ((m["p10"], "p10"), (m["p50"], "mediana"), (m["p90"], "p90")):
+            fig.add_annotation(x=x, y=-0.6, text=f"{x:,.0f}", yshift=-20, showarrow=False, font={"size": 11, "color": "#b4532f"})
+        fig.add_annotation(x=0, y=0, text="Histórico", xanchor="left", showarrow=False, font={"size": 12, "color": "#2a6f97"})
+        fig.add_annotation(x=0, y=-0.6, text="Modelo", xanchor="left", showarrow=False, font={"size": 12, "color": "#e07a5f"})
+    fig.update_layout(height=190 if m is None else 270, margin={"l": 20, "r": 20, "t": 10, "b": 40}, showlegend=False, plot_bgcolor="white",
                       xaxis={"title": f"Millones de pesos de {r['mes_ref']}", "range": [0, max(r["p90"], precio) * 1.1], "gridcolor": "#e7ebf0"},
-                      yaxis={"visible": False, "range": [-1, 1]})
+                      yaxis={"visible": False, "range": [-1, 1] if m is None else [-1.2, 1.0]})
     n_txt = f"{r['n']:,}".replace(",", ".")
     return html.Div([
         html.Div(f"La oferta de {precio:,.0f} M$ está {r['estado']}.", className="veredicto", style={"borderColor": COLOR_ESTADO[r["estado"]], "color": COLOR_ESTADO[r["estado"]]}),
         dcc.Graph(figure=fig, config={"displayModeBar": False}),
         html.P(f"Rango esperado en {zona}, {anio}: p10 {r['p10']:,.0f} · mediana {r['p50']:,.0f} · p90 {r['p90']:,.0f} M$ "
                f"(barra gruesa: p25 a p75). Se basa en {n_txt} compraventas con valor registradas ese año.", className="nota"),
+        texto_modelo(zona, anio, precio, m),
         html.P("Referencia histórica de valores registrados, no un avalúo. Un precio fuera del rango no implica fraude ni mala oferta.", className="nota"),
     ])
+
+
+def texto_modelo(zona, anio, precio, m):
+    """Resumen del rango que predice el modelo; aviso si todavía no se ha entrenado."""
+    if m is None:
+        return html.P("El rango del modelo aparecerá cuando exista models/rango/v1 (experimentos/train_rango.py --guardar-version v1).", className="aviso")
+    return html.P(f"Rango que predice el modelo (gradient boosting por cuantiles, línea punteada) para {zona} a mitad de {anio}: "
+                  f"p10 {m['p10']:,.0f} · mediana {m['p50']:,.0f} · p90 {m['p90']:,.0f} M$; con él la oferta está {m['estado']}. "
+                  "En la validación con 2023 el modelo no superó a los percentiles históricos, por eso el veredicto principal usa el histórico.",
+                  className="nota")
