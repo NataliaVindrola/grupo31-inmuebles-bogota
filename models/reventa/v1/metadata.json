@@ -1,0 +1,32 @@
+{
+  "modelo": "reventa",
+  "version": "v1",
+  "fecha": "2026-11-08T00:45:32",
+  "algoritmo": "HistGradientBoostingClassifier",
+  "features": [
+    "zona_cod",
+    "mes_anio",
+    "tipo_cod",
+    "n_previas"
+  ],
+  "objetivo": "1 si el predio se revende en 3 años o menos",
+  "tipos_predio": [
+    "RURAL",
+    "SIN INFORMACION",
+    "URBANO"
+  ],
+  "ventanas": {
+    "entrenamiento": "compras 2015-2017",
+    "prueba": "compras 2018-2020"
+  },
+  "params": {
+    "max_iter": 200,
+    "learning_rate": 0.05,
+    "max_depth": null,
+    "random_state": 42
+  },
+  "metricas": {
+    "auc": 0.5346014057000951,
+    "brier": 0.07848694528780607
+  }
+}
