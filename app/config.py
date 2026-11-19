@@ -4,7 +4,8 @@ from types import FrameType
 from typing import List, cast
 
 from loguru import logger
-from pydantic import AnyHttpUrl, BaseSettings
+from pydantic import AnyHttpUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Nivel del logger
 class LoggingSettings(BaseSettings):
@@ -26,10 +27,9 @@ class Settings(BaseSettings):
         "https://localhost:8000",  # type: ignore
     ]
 
-    PROJECT_NAME: str = "Banckchurn API"
+    PROJECT_NAME: str = "API Inmuebles Bogotá - Grupo 31"
 
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
 # Intercepción de mensajes de loggers 
 # See: https://loguru.readthedocs.io/en/stable/overview.html#entirely-compatible-with-standard-logging  
