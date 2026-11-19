@@ -10,7 +10,7 @@ class RangoEntrada(BaseModel):
 
     model_config = {"json_schema_extra": {"example": {"zona": "Sur", "anio": 2023, "precio_musd": 520}}}
 
-
+# ---------------------------------------------------------------------- reventa
 # Esquema para resultados
 class RangoHistorico(BaseModel):
     p10: float
@@ -35,3 +35,20 @@ class RangoRespuesta(BaseModel):
     estado: str
     historico: RangoHistorico
     modelo: Optional[RangoModelo] = None
+
+# ---------------------------------------------------------------------- reventa
+# Esquema reventa
+class ReventaEntrada(BaseModel):
+    zona: Literal["Norte", "Centro", "Sur"]
+    tipo_predio: Literal["URBANO", "RURAL", "SIN INFORMACION"] = "URBANO"
+    ventas_previas: int = Field(ge=0, le=50, description="Número de ventas previas del predio")
+
+    model_config = {"json_schema_extra": {"example": {"zona": "Sur", "tipo_predio": "URBANO", "ventas_previas": 2}}}
+
+
+class ReventaRespuesta(BaseModel):
+    zona: str
+    tipo_predio: str
+    ventas_previas: int
+    prob_reventa_3a: float
+    prob_zona_3a: Optional[float] = None
