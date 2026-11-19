@@ -10,7 +10,7 @@ class RangoEntrada(BaseModel):
 
     model_config = {"json_schema_extra": {"example": {"zona": "Sur", "anio": 2023, "precio_musd": 520}}}
 
-# ---------------------------------------------------------------------- reventa
+# ---------------------------------------------------------------------- rango
 # Esquema para resultados
 class RangoHistorico(BaseModel):
     p10: float
@@ -52,3 +52,23 @@ class ReventaRespuesta(BaseModel):
     ventas_previas: int
     prob_reventa_3a: float
     prob_zona_3a: Optional[float] = None
+
+
+
+# ---------------------------------------------------------------------- segmentos
+class SegmentoRecomendado(BaseModel):
+    posicion: int
+    zona: str
+    q: int = Field(description="Rango de valor de la primera venta (quintil 1 a 5)")
+    rango_min_musd: float
+    rango_max_musd: float
+    n: int = Field(description="Pares de ventas repetidas que respaldan la cifra")
+    retorno_real_anual: float = Field(description="Mediana del retorno real anual (0.05 = 5 %)")
+    ic_inf: float
+    ic_sup: float
+    prob_reventa_3a_zona: float = Field(description="Probabilidad de reventa a 3 años promedio de la zona")
+
+
+class SegmentosRespuesta(BaseModel):
+    criterio: str
+    segmentos: List[SegmentoRecomendado]
