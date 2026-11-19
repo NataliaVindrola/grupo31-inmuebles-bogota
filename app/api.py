@@ -1,4 +1,4 @@
-from fastapi import APIRouter,  HTTPException
+from fastapi import APIRouter,  HTTPException, Query
 from loguru import logger
 
 from app import __version__, schemas
@@ -69,3 +69,39 @@ def reventa(entrada: schemas.ReventaEntrada) -> dict:
         "prob_reventa_3a": prob,
         "prob_zona_3a": prob_zona,
     }
+
+
+CRITERIO_SEGMENTOS = (
+    "Segmentos (zona x rango de valor) con al menos 100 pares de ventas y retorno real positivo con confianza "
+    "(el límite inferior del intervalo del 90 % es mayor que 0), ordenados por la mediana del retorno real anual; "
+    "a igual retorno se prefiere la zona con mayor probabilidad de reventa a 3 años."
+)
+
+
+@api_router.get("/segmentos", response_model=schemas.SegmentosRespuesta, status_code=200)
+def segmentos(n: int = Query(5, ge=3, le=5, description="Cuántos segmentos devolver (3 a 5)")) -> dict:
+    """Ranking de los segmentos donde conviene concentrar la búsqueda, con su valorización real y su liquidez."""
+    logger.info(f"Consulta de segmentos: n={n}")
+    seg = servicios.tabla("segmentos")
+    liq = servicios.tabla("liquidez_resumen")
+    if seg is None or liq is None:
+        raise HTTPException(status_code=503, detail="Faltan las tablas de segmentos o de liquidez.")
+    df = seg[seg["suficiente"] & (seg["ic_inf"] > 0)].merge(liq[["zona", "prob_3a"]], on="zona")
+    df = df.sort_values(["mediana_real", "prob_3a"], ascending=False).head(n)
+    lista = [
+        {
+            "posicion": i,
+            "zona": r["zona"],
+            "q": int(r["q"]),
+            "rango_min_musd": float(r["rango_min_musd"]),
+            "rango_max_musd": float(r["rango_max_musd"]),
+            "n": int(r["n"]),
+            "retorno_real_anual": float(r["mediana_real"]),
+            "ic_inf": float(r["ic_inf"]),
+            "ic_sup": float(r["ic_sup"]),
+            "prob_reventa_3a_zona": float(r["prob_3a"]),
+        }
+        for i, (_, r) in enumerate(df.iterrows(), start=1)
+    ]
+    return {"criterio": CRITERIO_SEGMENTOS, "segmentos": lista}
+
