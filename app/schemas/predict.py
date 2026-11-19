@@ -1,43 +1,37 @@
 from typing import Any, List, Optional
 
-from pydantic import BaseModel
-from model.processing.validation import DataInputSchema
+from pydantic import BaseModel, Field
 
-# Esquema de los resultados de predicción
-class PredictionResults(BaseModel):
-    errors: Optional[Any]
-    version: str
-    predictions: Optional[List[float]]
+# Esquema de lo que el tablero le manda a la API
+class RangoEntrada(BaseModel):
+    zona: Literal["Norte", "Centro", "Sur"]
+    anio: int = Field(ge=2021, le=2026, description="Año de la oferta")
+    precio_musd: float = Field(gt=0, description="Precio de la oferta en millones de pesos constantes")
 
-# Esquema para inputs múltiples
-class MultipleDataInputs(BaseModel):
-    inputs: List[DataInputSchema]
+    model_config = {"json_schema_extra": {"example": {"zona": "Sur", "anio": 2023, "precio_musd": 520}}}
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "inputs": [
-                    {
-                        "Customer_Age": 57,
-                        "Gender": "M",
-                        "Dependent_count": 4,
-                        "Education_Level": "Graduate",
-                        "Marital_Status": "Single",
-                        "Income_Category": "$120K +",
-                        "Card_Category": "Blue",
-                        "Months_on_book":52,
-                        "Total_Relationship_Count":2,
-                        "Months_Inactive_12_mon":3,
-                        "Contacts_Count_12_mon":2,
-                        "Credit_Limit":25808,
-                        "Total_Revolving_Bal":0,
-                        "Avg_Open_To_Buy":25808,
-                        "Total_Amt_Chng_Q4_Q1":0.712,
-                        "Total_Trans_Amt":7794,
-                        "Total_Trans_Ct":94,
-                        "Total_Ct_Chng_Q4_Q1":0.843,
-                        "Avg_Utilization_Ratio": 0
-                    }
-                ]
-            }
-        }
+
+# Esquema para resultados
+class RangoHistorico(BaseModel):
+    p10: float
+    p25: float
+    p50: float
+    p75: float
+    p90: float
+    n: int
+    mes_ref: str
+
+
+class RangoModelo(BaseModel):
+    p10: float
+    p50: float
+    p90: float
+
+
+class RangoRespuesta(BaseModel):
+    zona: str
+    anio: int
+    precio_musd: float
+    estado: str
+    historico: RangoHistorico
+    modelo: Optional[RangoModelo] = None
