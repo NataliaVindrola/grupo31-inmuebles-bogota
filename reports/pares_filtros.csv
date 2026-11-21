@@ -1,0 +1,7 @@
+filtro,pares,pct_del_total
+Pares totales (ventas consecutivas con valor),10181,1.0
+Al menos 30 dias entre ventas,10036,0.986
+Ambos valores >= 5 millones,9800,0.963
+Retorno entre 0.2x y 5x,9332,0.917
+Al menos 180 dias (se anualiza),5990,0.588
+Sin operaciones atipicas (valor identico y <= 365 dias),5738,0.564

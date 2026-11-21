@@ -2,3 +2,8 @@
 __pycache__/
 .venv/
 .env
+
+# MLflow y artefactos locales
+mlruns/
+mlflow.db
+*.db
