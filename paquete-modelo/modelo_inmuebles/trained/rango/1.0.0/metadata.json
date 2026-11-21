@@ -1,0 +1,46 @@
+{
+  "modelo": "rango",
+  "version": "1.0.0",
+  "fecha": "2026-11-21T05:58:28",
+  "algoritmo": "HistGradientBoostingRegressor (loss=quantile)",
+  "cuantiles": [
+    0.1,
+    0.5,
+    0.9
+  ],
+  "features": [
+    "zona_cod",
+    "t",
+    "mes_anio"
+  ],
+  "objetivo": "log(valor_real), pesos constantes",
+  "ventanas": {
+    "entrenamiento": "2021-2022",
+    "prueba": "2023"
+  },
+  "hiperparametros": {
+    "max_iter": 60,
+    "learning_rate": 0.08594109023016822,
+    "max_leaf_nodes": 9,
+    "min_samples_leaf": 236,
+    "l2_regularization": 2.6221602497985857e-08,
+    "random_state": 42
+  },
+  "origen": "corrida hgb_optuna del experimento rango-valor (Optuna, 20 intentos, TPE semilla 42, IPC del DANE)",
+  "n_train": 166971,
+  "n_test": 93006,
+  "metricas": {
+    "cobertura_p10_p90": 0.8268498806528611,
+    "ancho_mediano_musd": 733.935715477517,
+    "pinball_q10": 0.18249111682108704,
+    "pinball_q50": 0.31908220644429935,
+    "pinball_q90": 0.1540765603123318
+  },
+  "linea_base": {
+    "cobertura_p10_p90": 0.8246242177924005,
+    "ancho_mediano_musd": 742.9294650048164,
+    "pinball_q10": 0.18224739039569046,
+    "pinball_q50": 0.31406653962280373,
+    "pinball_q90": 0.14878271077502261
+  }
+}
