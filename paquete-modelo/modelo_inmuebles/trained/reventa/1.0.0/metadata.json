@@ -1,0 +1,38 @@
+{
+  "modelo": "reventa",
+  "version": "1.0.0",
+  "fecha": "2026-11-21T05:58:36",
+  "algoritmo": "HistGradientBoostingClassifier",
+  "features": [
+    "zona_cod",
+    "mes_anio",
+    "tipo_cod",
+    "n_previas"
+  ],
+  "objetivo": "1 si el predio se revende en 3 años o menos",
+  "tipos_predio": [
+    "RURAL",
+    "SIN INFORMACION",
+    "URBANO"
+  ],
+  "ventanas": {
+    "entrenamiento": "compras 2015-2017",
+    "prueba": "compras 2018-2020"
+  },
+  "hiperparametros": {
+    "max_iter": 200,
+    "learning_rate": 0.05,
+    "random_state": 42
+  },
+  "origen": "corrida hgb_reventa_base del experimento reventa-3a (mejor AUC que la variante con historial)",
+  "n_train": 190694,
+  "n_test": 173876,
+  "metricas": {
+    "auc": 0.5346014057000951,
+    "brier": 0.07848694528780607
+  },
+  "linea_base": {
+    "auc": 0.5032333422129232,
+    "brier": 0.0788020283730692
+  }
+}
