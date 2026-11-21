@@ -1,0 +1,40 @@
+# Configuración del paquete modelo_inmuebles (Grupo 31 – inmuebles de Bogotá).
+# Los hiperparámetros salen de las corridas registradas en MLflow (ver la sección de modelos del reporte).
+
+nombre_paquete: modelo_inmuebles
+
+datos:
+  # Rutas relativas a la carpeta desde donde se ejecuta el entrenamiento (paquete-modelo/); se obtienen con `dvc pull`.
+  compraventas: ../data/compraventas_0125_bogota.csv
+  ipc: ../data/ipc.csv              # índice oficial del DANE (base dic-2018 = 100)
+  mes_referencia: "2026-09"         # mes de los "pesos constantes"
+
+semilla: 42
+
+# Modelo principal: rango esperado (p10, p50 y p90) del valor registrado.
+rango:
+  algoritmo: HistGradientBoostingRegressor (loss=quantile), un modelo por cuantil
+  origen: corrida hgb_optuna del experimento rango-valor (Optuna, 20 intentos, TPE semilla 42, IPC del DANE)
+  cuantiles: [0.10, 0.50, 0.90]
+  variables: [zona_cod, t, mes_anio]   # zona, meses desde enero de 2021 y mes del año: lo que el tablero conoce
+  hiperparametros:
+    max_iter: 60
+    learning_rate: 0.08594109023016822
+    max_leaf_nodes: 9
+    min_samples_leaf: 236
+    l2_regularization: 2.6221602497985857e-08
+  ventanas: {entrenamiento: "2021-2022", prueba: "2023"}
+
+# Modelo secundario: probabilidad de reventa a 3 años.
+reventa:
+  algoritmo: HistGradientBoostingClassifier
+  origen: corrida hgb_reventa_base del experimento reventa-3a (mejor AUC que la variante con historial)
+  variables: [zona_cod, mes_anio, tipo_cod, n_previas]
+  hiperparametros:
+    max_iter: 200
+    learning_rate: 0.05
+  ventanas: {entrenamiento: "compras 2015-2017", prueba: "compras 2018-2020"}
+
+mlflow:
+  experimento_rango: rango-valor
+  experimento_reventa: reventa-3a
