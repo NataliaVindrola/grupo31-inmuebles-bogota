@@ -7,7 +7,7 @@ from dashboard import servicios
 
 
 api_router = APIRouter()
-MODEL_VERSION = "v1"
+MODEL_VERSION = servicios.VERSION_MODELOS
 
 # Ruta para verificar que la API se esté ejecutando correctamente
 @api_router.get("/health", response_model=schemas.Health, status_code=200)

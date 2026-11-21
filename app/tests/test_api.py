@@ -24,7 +24,7 @@ def test_health(client: TestClient) -> None:
     assert r.status_code == 200
     datos = r.json()
     assert datos["name"] == settings.PROJECT_NAME
-    assert datos["model_version"] == "v1"
+    assert datos["model_version"] == servicios.VERSION_MODELOS
     assert datos["api_version"]
 
 
