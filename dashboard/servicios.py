@@ -61,7 +61,7 @@ def rango_oferta(zona: str, anio: int, precio_musd: float) -> dict | None:
 
 
 # ------------------------------------------------------------------------------------------- modelos (Julián)
-VERSION_MODELOS = "v1"
+VERSION_MODELOS = "1.0.0"
 TIPOS_PREDIO = ["URBANO", "RURAL", "SIN INFORMACION"]
 
 
@@ -69,7 +69,7 @@ TIPOS_PREDIO = ["URBANO", "RURAL", "SIN INFORMACION"]
 def _modelo(nombre: str, version: str = VERSION_MODELOS):
     """Carga una sola vez el modelo de models/<nombre>/<version>/; None si todavía no se ha entrenado."""
     try:
-        from src import rango, reventa
+        from modelo_inmuebles.modelos import rango, reventa
         return {"rango": rango, "reventa": reventa}[nombre].cargar(version)
     except (FileNotFoundError, ImportError):
         return None
@@ -83,7 +83,7 @@ def rango_modelo(zona: str, anio: int, precio_musd: float | None = None) -> dict
     modelos = _modelo("rango")
     if modelos is None:
         return None
-    from src import rango
+    from modelo_inmuebles.modelos import rango
     r = rango.predecir(modelos, zona, f"{int(anio)}-06-15")
     if precio_musd is not None:
         r["estado"] = ("por debajo del rango" if precio_musd < r["p10"]
@@ -96,5 +96,5 @@ def prob_reventa_modelo(zona: str, tipo_predio: str, n_previas: int, fecha: str 
     modelo = _modelo("reventa")
     if modelo is None:
         return None
-    from src import reventa
+    from modelo_inmuebles.modelos import reventa
     return reventa.predecir(modelo, zona, fecha or f"{MES_REF}-15", tipo_predio, int(n_previas))
