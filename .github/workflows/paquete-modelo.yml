@@ -1,0 +1,31 @@
+# Integración continua del paquete del modelo: en cada push o pull request que cambie paquete-modelo/,
+# corre las pruebas del paquete con los modelos guardados y construye el .whl (queda como artefacto descargable).
+name: paquete-modelo
+
+on:
+  push:
+    paths: ["paquete-modelo/**", ".github/workflows/paquete-modelo.yml"]
+  pull_request:
+    paths: ["paquete-modelo/**", ".github/workflows/paquete-modelo.yml"]
+
+jobs:
+  pruebas-y-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: paquete-modelo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar tox y build
+        run: python -m pip install --upgrade pip tox build
+      - name: Pruebas del paquete (tox -e test)
+        run: tox run -e test
+      - name: Construir el paquete
+        run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: modelo-inmuebles-whl
+          path: paquete-modelo/dist/*.whl

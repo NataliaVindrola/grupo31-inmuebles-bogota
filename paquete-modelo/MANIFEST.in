@@ -1,0 +1,7 @@
+include README.md
+include modelo_inmuebles/VERSION
+include modelo_inmuebles/config.yml
+recursive-include modelo_inmuebles/trained *.joblib *.json
+include requirements/*.txt
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
